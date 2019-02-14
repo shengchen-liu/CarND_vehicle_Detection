@@ -12,5 +12,6 @@ checkpoints
 logs/*
 *.mp4
 *.jpg
-.idea
+.idea/
+.idea/*
  __pycache__

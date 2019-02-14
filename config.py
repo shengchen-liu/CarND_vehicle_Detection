@@ -3,7 +3,7 @@ class Config(object):
         ##### Image size,
         self.img_rows = 640
         self.img_cols = 960
-        self.batch_size = 32
+        self.batch_size = 16
 
 
 
