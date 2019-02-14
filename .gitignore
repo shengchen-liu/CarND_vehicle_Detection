@@ -1,0 +1,14 @@
+data
+object-dataset
+object-detection-crowdai
+.ipynb_checkpoints
+*.h5
+models
+*.swp
+*.p
+data/*
+data_example
+checkpoints
+logs/*
+*.mp4
+*.jpg
