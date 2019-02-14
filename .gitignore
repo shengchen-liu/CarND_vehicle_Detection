@@ -13,3 +13,4 @@ logs/*
 *.mp4
 *.jpg
 .idea
+ __pycache__
