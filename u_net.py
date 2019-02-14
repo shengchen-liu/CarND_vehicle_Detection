@@ -35,14 +35,33 @@ if not os.path.exists('checkpoints'):
     os.mkdir('checkpoints')
 
 #### Training generator, generates augmented images
+
+def generate_train_batch(data, batch_size=32):
+    batch_images = np.zeros((batch_size, config.img_rows, config.img_cols, 3))
+    batch_masks = np.zeros((batch_size, config.img_rows, config.img_cols, 1))
+    while 1:
+        for i_batch in range(batch_size):
+            i_line = np.random.randint(len(data))
+            name_str, img, bb_boxes = get_image_name(df_vehicles, i_line,
+                                                     size=(config.img_cols, config.img_rows),
+                                                     augmentation=True,
+                                                     trans_range=50,
+                                                     scale_range=50
+                                                     )
+            img_mask = get_mask_seg(img, bb_boxes)
+            batch_images[i_batch] = img
+            batch_masks[i_batch] = img_mask
+        yield batch_images, batch_masks
+
 def generate_data_batch(data, dataframe, batch_size=32):
     batch_images = np.zeros((batch_size, config.img_rows, config.img_cols, 3))
     batch_masks = np.zeros((batch_size, config.img_rows, config.img_cols, 1))
     # shuffle data
-    data = shuffle(data)
+    # data = shuffle(data)
     loaded_elements = 0
     while loaded_elements < batch_size:
-        file_name = data.pop()
+        file_name = data[np.random.randint(len(data))]
+        # file_name = data.pop()
         name_str, img, bb_boxes = get_image_name(dataframe, file_name,
                                                    size=(config.img_cols, config.img_rows),
                                                    augmentation=True,
@@ -144,15 +163,15 @@ if __name__ == '__main__':
     print(len(df_vehicles))
 
     # split udacity csv data into training and validation
-    file_names = df_vehicles['File_Path'].unique()
-    train_data, val_data = split_train_val(file_names)
+
+    train_data, val_data = split_train_val(df_vehicles)
 
     ### Generator
 
-    training_gen = generate_data_batch(train_data, df_vehicles, config.batch_size)
+    # training_gen = generate_data_batch(train_data, df_vehicles, config.batch_size)
+    training_gen = generate_train_batch(train_data, config.batch_size)
 
-
-    eval_gen = generate_data_batch(val_data, df_vehicles, config.batch_size)
+    eval_gen = generate_train_batch(val_data, config.batch_size)
     # batch_img, batch_mask = next(eval_gen)
     # # ### Plotting generator output
     # # for i in range(2):

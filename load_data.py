@@ -30,10 +30,12 @@ def split_train_val(data, test_size=0.2):
     :param dataframe:data_frame for split
     :return: train_split, validation_split
     """
-    driving_data = [row for row in data]
+    file_names = data['File_Path'].unique()
+    driving_data = [row for row in file_names]
 
-    train_data, val_data = train_test_split(driving_data, test_size=test_size, random_state=1)
-
+    train_names, val_names = train_test_split(driving_data, test_size=test_size, random_state=1)
+    train_data = data.loc[data['File_Path'].isin(train_names)]
+    val_data = data.loc[data['File_Path'].isin(val_names)]
     return train_data, val_data
 
 if __name__ == '__main__':

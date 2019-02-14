@@ -71,9 +71,39 @@ def stretch_image(img, bb_boxes_f, scale_range):
     return img, bb_boxes_f
 
 
-def get_image_name(df, file_name, size=(640, 300), augmentation=False, trans_range=20, scale_range=20):
+# def get_image_name(df, file_name, size=(640, 300), augmentation=False, trans_range=20, scale_range=20):
+#     ### Get image by name
+#     img = cv2.imread(file_name)
+#     img_size = np.shape(img)
+#
+#     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#     img = cv2.resize(img, size)
+#     name_str = file_name.split('/')
+#     name_str = name_str[-1]
+#     # print(name_str)
+#     # print(file_name)
+#     bb_boxes = df[df['Frame'] == name_str].reset_index()
+#     img_size_post = np.shape(img)
+#
+#     if augmentation == True:
+#         img, bb_boxes = trans_image(img, bb_boxes, trans_range)
+#         img, bb_boxes = stretch_image(img, bb_boxes, scale_range)
+#         img = augment_brightness_camera_images(img)
+#
+#     bb_boxes['xmin'] = np.round(bb_boxes['xmin'] / img_size[1] * img_size_post[1]).astype('int32')
+#     bb_boxes['xmax'] = np.round(bb_boxes['xmax'] / img_size[1] * img_size_post[1]).astype('int32')
+#     bb_boxes['ymin'] = np.round(bb_boxes['ymin'] / img_size[0] * img_size_post[0]).astype('int32')
+#     bb_boxes['ymax'] = np.round(bb_boxes['ymax'] / img_size[0] * img_size_post[0]).astype('int32')
+#     bb_boxes['Area'] = (bb_boxes['xmax'] - bb_boxes['xmin']) * (bb_boxes['ymax'] - bb_boxes['ymin'])
+#     # bb_boxes = bb_boxes[bb_boxes['Area']>400]
+#
+#     return name_str, img, bb_boxes
+
+
+def get_image_name(df, ind, size=(640, 300), augmentation=False, trans_range=20, scale_range=20):
     ### Get image by name
 
+    file_name = df['File_Path'][ind]
     img = cv2.imread(file_name)
     img_size = np.shape(img)
 
@@ -99,7 +129,6 @@ def get_image_name(df, file_name, size=(640, 300), augmentation=False, trans_ran
     # bb_boxes = bb_boxes[bb_boxes['Area']>400]
 
     return name_str, img, bb_boxes
-
 
 def get_mask_seg(img, bb_boxes_f, verbose=False):
     #### Get mask
