@@ -2,18 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="646ea2fd-b1d5-4319-8572-e80841192d38" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/draw_bbox.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/input_video/video1.mov" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/img/project_video.gif" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SSD.py" beforeDir="false" afterPath="$PROJECT_DIR$/SSD.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/functions_detection.py" beforeDir="false" afterPath="$PROJECT_DIR$/functions_detection.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main_hog.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main_ssd.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_ssd.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/process_video.py" beforeDir="false" afterPath="$PROJECT_DIR$/process_video.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/u_net.py" beforeDir="false" afterPath="$PROJECT_DIR$/u_net.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -61,7 +51,7 @@
           <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
             <state split_layout="SPLIT">
               <first_editor relative-caret-position="105">
-                <caret line="7" column="58" selection-start-line="7" selection-start-column="58" selection-end-line="7" selection-end-column="58" />
+                <caret line="7" column="55" selection-start-line="7" selection-start-column="55" selection-end-line="7" selection-end-column="55" />
               </first_editor>
               <second_editor />
             </state>
@@ -140,7 +130,7 @@
             <path>
               <item name="CarND_vehicle_Detection" type="b2602c69:ProjectViewProjectNode" />
               <item name="CarND_vehicle_Detection" type="462c0819:PsiDirectoryNode" />
-              <item name="input_video" type="462c0819:PsiDirectoryNode" />
+              <item name="img" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="CarND_vehicle_Detection" type="b2602c69:ProjectViewProjectNode" />
@@ -160,6 +150,7 @@
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/img" />
       <recent name="$PROJECT_DIR$/input_video" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
@@ -571,7 +562,7 @@
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
           <first_editor relative-caret-position="105">
-            <caret line="7" column="58" selection-start-line="7" selection-start-column="58" selection-end-line="7" selection-end-column="58" />
+            <caret line="7" column="55" selection-start-line="7" selection-start-column="55" selection-end-line="7" selection-end-column="55" />
           </first_editor>
           <second_editor />
         </state>

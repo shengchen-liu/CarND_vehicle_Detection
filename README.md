@@ -5,7 +5,7 @@
 [image0]: ./img/ssd.png "Pipeline"
 
 <p align="center">
- <a href="https://youtu.be/JlFFbvWWsHg"><img src="./output_video/project_video.gif" alt="Overview" width="50%" height="50%"></a>
+ <a href="https://youtu.be/JlFFbvWWsHg"><img src="./img/project_video.gif" alt="Overview" width="50%" height="50%"></a>
  <br>Qualitative results. (click for full video)
 </p>
 
