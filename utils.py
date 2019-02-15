@@ -2,6 +2,15 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from load_data import load_data
+from scipy.ndimage.measurements import label
+import pandas as pd
+
+from config import Config
+
+config = Config()
+heatmap_prev = np.zeros((640,960))
+
+heatmap_10 = [np.zeros((640,960))]*10
 
 ### Augmentation functions
 
@@ -189,6 +198,60 @@ def plot_im_bbox(im, bb_boxes):
         plt.plot(bb_box_i[2], bb_box_i[3], 'bs')
     plt.axis('off')
     plt.show()
+
+
+#### Function for drawing bounding boxes, taken from Ryan's code on Udacity
+
+def draw_labeled_bboxes(img, labels):
+    # Iterate through all detected cars
+    for car_number in range(1, labels[1]+1):
+        # Find pixels with each car_number label value
+        nonzero = (labels[0] == car_number).nonzero()
+        # Identify x and y values of those pixels
+        nonzeroy = np.array(nonzero[0])
+        nonzerox = np.array(nonzero[1])
+        # Define a bounding box based on min/max x and y
+        if ((np.max(nonzeroy)-np.min(nonzeroy)>50) & (np.max(nonzerox)-np.min(nonzerox)>50)):
+            bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
+            # Draw the box on the image
+            cv2.rectangle(img, bbox[0], bbox[1], (0,0,255),6)
+    # Return the image
+    return img
+
+def test_new_img(img, model):
+    img = cv2.resize(img,(config.img_cols, config.img_rows))
+    img = np.reshape(img,(1,config.img_rows, config.img_cols,3))
+    pred = model.predict(img)
+    return pred,img[0]
+
+def get_BB_new_img(img, model):
+    # Get bounding boxes
+    pred,img = test_new_img(img, model)
+    img  = np.array(img,dtype= np.uint8)
+    img_pred = np.array(255*pred[0],dtype=np.uint8)
+    heatmap = img_pred[:,:,0]
+    heatmap = smooth_heatmap(heatmap)
+    labels = label(heatmap)
+    draw_img = draw_labeled_bboxes(np.copy(img), labels)
+    return draw_img
+
+
+def smooth_heatmap(heatmap):
+    # Smoothing heatmap as average of 10 previous frames
+    global heatmap_10
+
+    heatmap_10_1 = heatmap_10[1:]
+    heatmap_10_1.append(heatmap)
+
+    heatmap_10 = heatmap_10_1
+
+    heatmap = np.mean(heatmap_10, axis=0)
+
+    # heatmap = heatmap_prev*.2 + heatmap*.8
+    # heatmap[heatmap>240] = 255
+    # heatmap[heatmap<240] = 0
+
+    return heatmap
 
 if __name__ == '__main__':
     # Load data

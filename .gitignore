@@ -1,3 +1,4 @@
+output_video
 data
 object-dataset
 object-detection-crowdai
@@ -14,4 +15,7 @@ logs/*
 *.jpg
 .idea/
 .idea/*
- __pycache__
+ __pycache__/*
+.idea/workspace.xml
+input_video
+input_video/*

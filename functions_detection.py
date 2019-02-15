@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from computer_vision_utils.stitching import stitch_together
+# from computer_vision_utils.stitching import stitch_together
 from functions_feat_extraction import image_to_features
 import matplotlib.pyplot as plt
 
@@ -52,36 +52,36 @@ def compute_heatmap_from_detections(frame, hot_windows, threshold=5, verbose=Fal
     return heatmap, heatmap_thresh
 
 
-def compute_windows_multiscale(image, verbose=False):
-    """
-    Naive implementation of multiscale window search.
-    """
-    h, w, c = image.shape
-
-    windows_multiscale = []
-
-    windows_32 = slide_window(image, x_start_stop=[None, None], y_start_stop=[4 * h//8, 5 * h//8],
-                                   xy_window=(32, 32), xy_overlap=(0.8, 0.8))
-    windows_multiscale.append(windows_32)
-
-    windows_64 = slide_window(image, x_start_stop=[None, None], y_start_stop=[4 * h//8, 6 * h//8],
-                                   xy_window=(64, 64), xy_overlap=(0.8, 0.8))
-    windows_multiscale.append(windows_64)
-
-    windows_128 = slide_window(image, x_start_stop=[None, None], y_start_stop=[3 * h//8, h],
-                                   xy_window=(128, 128), xy_overlap=(0.8, 0.8))
-    windows_multiscale.append(windows_128)
-
-    if verbose:
-        windows_img_32 = draw_boxes(image, windows_32, color=(0, 0, 255), thick=1)
-        windows_img_64 = draw_boxes(image, windows_64, color=(0, 255, 0), thick=1)
-        windows_img_128 = draw_boxes(image, windows_128, color=(255, 0, 0), thick=1)
-
-        stitching = stitch_together([windows_img_32, windows_img_64, windows_img_128], (1, 3), resize_dim=(1300, 500))
-        cv2.imshow('', stitching)
-        cv2.waitKey()
-
-    return np.concatenate(windows_multiscale)
+# def compute_windows_multiscale(image, verbose=False):
+#     """
+#     Naive implementation of multiscale window search.
+#     """
+#     h, w, c = image.shape
+#
+#     windows_multiscale = []
+#
+#     windows_32 = slide_window(image, x_start_stop=[None, None], y_start_stop=[4 * h//8, 5 * h//8],
+#                                    xy_window=(32, 32), xy_overlap=(0.8, 0.8))
+#     windows_multiscale.append(windows_32)
+#
+#     windows_64 = slide_window(image, x_start_stop=[None, None], y_start_stop=[4 * h//8, 6 * h//8],
+#                                    xy_window=(64, 64), xy_overlap=(0.8, 0.8))
+#     windows_multiscale.append(windows_64)
+#
+#     windows_128 = slide_window(image, x_start_stop=[None, None], y_start_stop=[3 * h//8, h],
+#                                    xy_window=(128, 128), xy_overlap=(0.8, 0.8))
+#     windows_multiscale.append(windows_128)
+#
+#     if verbose:
+#         windows_img_32 = draw_boxes(image, windows_32, color=(0, 0, 255), thick=1)
+#         windows_img_64 = draw_boxes(image, windows_64, color=(0, 255, 0), thick=1)
+#         windows_img_128 = draw_boxes(image, windows_128, color=(255, 0, 0), thick=1)
+#
+#         stitching = stitch_together([windows_img_32, windows_img_64, windows_img_128], (1, 3), resize_dim=(1300, 500))
+#         cv2.imshow('', stitching)
+#         cv2.waitKey()
+#
+#     return np.concatenate(windows_multiscale)
 
 
 def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],

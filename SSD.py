@@ -9,12 +9,15 @@ from keras.layers import Flatten
 from keras.layers import GlobalAveragePooling2D
 from keras.layers import Input
 from keras.layers import MaxPooling2D
-from keras.layers import merge
+from keras.layers import concatenate, Lambda, Conv2D
 from keras.layers import Reshape
 from keras.layers import ZeroPadding2D
+from keras.regularizers import l2
+
 from keras.models import Model
 from keras.engine.topology import InputSpec
 from keras.engine.topology import Layer
+
 import numpy as np
 import tensorflow as tf
 from keras.preprocessing import image
@@ -24,7 +27,7 @@ import matplotlib.pyplot as plt
 import os
 from keras.applications.imagenet_utils import preprocess_input
 from keras.preprocessing import image
-from computer_vision_utils.bbox_helper import Rectangle
+from draw_bbox import Rectangle
 
 
 WEIGHTS_URL = 'http://imagelab.ing.unimore.it/files/model_weights/SSD/weights_SSD300.hdf5'
@@ -366,7 +369,7 @@ class PriorBox(Layer):
         self.clip = True
         super(PriorBox, self).__init__(**kwargs)
 
-    def get_output_shape_for(self, input_shape):
+    def compute_output_shape(self, input_shape):
         num_priors_ = len(self.aspect_ratios)
         layer_width = input_shape[self.waxis]
         layer_height = input_shape[self.haxis]
@@ -438,15 +441,12 @@ class PriorBox(Layer):
             pass
         return prior_boxes_tensor
 
-
 def SSD300(input_shape, num_classes=21, pretrained=True):
     """SSD300 architecture.
-
     # Arguments
         input_shape: Shape of the input image,
             expected to be either (300, 300, 3) or (3, 300, 300)(not tested).
         num_classes: Number of classes including background.
-
     # References
         https://arxiv.org/abs/1512.02325
     """
@@ -670,27 +670,27 @@ def SSD300(input_shape, num_classes=21, pretrained=True):
                                     name='pool6_reshaped')(net['pool6'])
     net['pool6_mbox_priorbox'] = priorbox(net['pool6_reshaped'])
     # Gather all predictions
-    net['mbox_loc'] = merge([net['conv4_3_norm_mbox_loc_flat'],
+    net['mbox_loc'] = concatenate([net['conv4_3_norm_mbox_loc_flat'],
                              net['fc7_mbox_loc_flat'],
                              net['conv6_2_mbox_loc_flat'],
                              net['conv7_2_mbox_loc_flat'],
                              net['conv8_2_mbox_loc_flat'],
                              net['pool6_mbox_loc_flat']],
-                            mode='concat', concat_axis=1, name='mbox_loc')
-    net['mbox_conf'] = merge([net['conv4_3_norm_mbox_conf_flat'],
+                            axis=1, name='mbox_loc')
+    net['mbox_conf'] = concatenate([net['conv4_3_norm_mbox_conf_flat'],
                               net['fc7_mbox_conf_flat'],
                               net['conv6_2_mbox_conf_flat'],
                               net['conv7_2_mbox_conf_flat'],
                               net['conv8_2_mbox_conf_flat'],
                               net['pool6_mbox_conf_flat']],
-                             mode='concat', concat_axis=1, name='mbox_conf')
-    net['mbox_priorbox'] = merge([net['conv4_3_norm_mbox_priorbox'],
+                             axis=1, name='mbox_conf')
+    net['mbox_priorbox'] = concatenate([net['conv4_3_norm_mbox_priorbox'],
                                   net['fc7_mbox_priorbox'],
                                   net['conv6_2_mbox_priorbox'],
                                   net['conv7_2_mbox_priorbox'],
                                   net['conv8_2_mbox_priorbox'],
                                   net['pool6_mbox_priorbox']],
-                                 mode='concat', concat_axis=1,
+                                 axis=1,
                                  name='mbox_priorbox')
     if hasattr(net['mbox_loc'], '_keras_shape'):
         num_boxes = net['mbox_loc']._keras_shape[-1] // 4
@@ -702,17 +702,16 @@ def SSD300(input_shape, num_classes=21, pretrained=True):
                                name='mbox_conf_logits')(net['mbox_conf'])
     net['mbox_conf'] = Activation('softmax',
                                   name='mbox_conf_final')(net['mbox_conf'])
-    net['predictions'] = merge([net['mbox_loc'],
+    net['predictions'] = concatenate([net['mbox_loc'],
                                net['mbox_conf'],
                                net['mbox_priorbox']],
-                               mode='concat', concat_axis=2,
+                               axis=2,
                                name='predictions')
     model = Model(net['input'], net['predictions'])
 
     if pretrained:
         pretrained_weights = get_file('SSD_pretrained.h5', origin=WEIGHTS_URL)
         model.load_weights(pretrained_weights, by_name=True)
-
     return model
 
 
@@ -744,7 +743,7 @@ def process_frame_bgr_with_SSD(frame_bgr, ssd_model, bbox_helper, allow_classes=
     img = image.img_to_array(cv2.resize(frame_bgr, (300, 300)))
     inputs.append(img.copy())
     inputs = preprocess_input(np.array(inputs))
-    preds = ssd_model.predict(inputs, batch_size=1, verbose=1)
+    preds = ssd_model.predict(inputs, batch_size=1, verbose=0)
     results = bbox_helper.detection_out(preds, confidence_threshold=min_confidence)
     results = results[0]  # processing one frame, so remove batchsize
 

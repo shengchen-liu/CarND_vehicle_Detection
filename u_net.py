@@ -25,6 +25,7 @@ from metrics import *
 import os
 from sklearn.utils import shuffle
 import math
+from moviepy.editor import VideoFileClip
 
 config = Config()
 if not os.path.exists('result'):
@@ -33,6 +34,8 @@ if not os.path.exists('logs'):
     os.mkdir('logs')
 if not os.path.exists('checkpoints'):
     os.mkdir('checkpoints')
+if not os.path.exists('video_out'):
+    os.mkdir('video_out')
 
 #### Training generator, generates augmented images
 
@@ -95,6 +98,7 @@ def generate_test_batch(data, batch_size=32):
         yield batch_images, batch_masks
 
 
+
 def get_unet():
     inputs = Input((config.img_rows, config.img_cols, 3))
     inputs_norm = Lambda(lambda x: x / 127.5 - 1.)
@@ -147,6 +151,17 @@ def step_decay(epoch):
            math.floor((1+epoch)/epochs_drop))
    return lrate
 
+def process_video(input_file, output_file):
+    """ Given input_file video, save annotated video to output_file """
+    # video = VideoFileClip(input_file).subclip(40,44) # from 38s to 46s
+    video = VideoFileClip(input_file)
+    annotated_video = video.fl_image(process_pipeline)
+    annotated_video.write_videofile(output_file, audio=False)
+
+def process_pipeline(frame):
+    frame_out = get_BB_new_img(frame, model, verbose=False)
+    frame_out = cv2.cvtColor(frame_out, cv2.COLOR_RGB2BGR)
+
 if __name__ == '__main__':
 
 
@@ -168,57 +183,107 @@ if __name__ == '__main__':
 
     ### Generator
 
-    # training_gen = generate_data_batch(train_data, df_vehicles, config.batch_size)
-    training_gen = generate_train_batch(train_data, config.batch_size)
 
-    eval_gen = generate_train_batch(val_data, config.batch_size)
-    # batch_img, batch_mask = next(eval_gen)
-    # # ### Plotting generator output
-    # # for i in range(2):
-    # #     im = np.array(batch_img[i], dtype=np.uint8)
-    # #     im_mask = np.array(batch_mask[i], dtype=np.uint8)
-    # #     plt.subplot(1, 3, 1)
-    # #     plt.imshow(im)
-    # #     plt.axis('off')
-    # #     plt.subplot(1, 3, 2)
-    # #     plt.imshow(im_mask[:, :, 0])
-    # #     plt.axis('off')
-    # #     plt.subplot(1, 3, 3)
-    # #     plt.imshow(cv2.bitwise_and(im, im, mask=im_mask));
-    # #     plt.axis('off')
-    # #     plt.show();
 
-    smooth = 1.
     model = get_unet()
-    model.compile(optimizer=Adam(lr=1e-4),
-                  loss=IOU_calc_loss, metrics=[IOU_calc])
-
     model.summary()
+    if config.mode == 'train':
+        # training_gen = generate_data_batch(train_data, df_vehicles, config.batch_size)
+        training_gen = generate_train_batch(train_data, config.batch_size)
 
-    # define callbacks to save history and weights
-    checkpointer = ModelCheckpoint('checkpoints/weights.{epoch:02d}-{val_loss:.3f}.hdf5')
-    logger = CSVLogger(filename='logs/history.csv')
-    tflogger = TensorBoard(log_dir='./logs', histogram_freq=0, batch_size=config.batch_size, write_graph=True, write_grads=False,
-                                write_images=False, embeddings_freq=0, embeddings_layer_names=None,
-                                embeddings_metadata=None, embeddings_data=None, update_freq='epoch')
-    #learning rate
-    # learning schedule callback
-    lrate = LearningRateScheduler(step_decay)
+        eval_gen = generate_train_batch(val_data, config.batch_size)
 
-    ### Using previously trained data. Set load_pretrained = False, increase epochs and train for full training.
-    load_pretrained = True
-    if load_pretrained == True:
+        smooth = 1.
+
+        model.compile(optimizer=Adam(lr=1e-4),
+                      loss=IOU_calc_loss, metrics=[IOU_calc])
+
+
+
+        # define callbacks to save history and weights
+        checkpointer = ModelCheckpoint('checkpoints/weights.{epoch:02d}-{val_loss:.3f}.hdf5')
+        logger = CSVLogger(filename='logs/history.csv')
+        tflogger = TensorBoard(log_dir='./logs', histogram_freq=0, batch_size=config.batch_size, write_graph=True, write_grads=False,
+                                    write_images=False, embeddings_freq=0, embeddings_layer_names=None,
+                                    embeddings_metadata=None, embeddings_data=None, update_freq='epoch')
+        #learning rate
+        # learning schedule callback
+        lrate = LearningRateScheduler(step_decay)
+
+        ### Using previously trained data. Set load_pretrained = False, increase epochs and train for full training.
+        load_pretrained = True
+        if load_pretrained == True:
+            model.load_weights("result/model_pretrained.h5")
+
+        # history = model.fit_generator(training_gen,
+        #                               samples_per_epoch=1000,
+        #                               nb_epoch=1)
+        model.fit_generator(generator=training_gen,
+                          steps_per_epoch=len(train_data)/config.batch_size,
+                          epochs=50,
+                          validation_data=eval_gen,
+                          validation_steps=len(val_data)/config.batch_size,
+                          callbacks=[checkpointer, logger, tflogger, lrate])
+    elif config.mode == 'eval':
+        eval_gen = generate_train_batch(val_data, config.batch_size)
         model.load_weights("result/model_pretrained.h5")
+        ### Test on last frames of data
 
-    # history = model.fit_generator(training_gen,
-    #                               samples_per_epoch=1000,
-    #                               nb_epoch=1)
-    model.fit_generator(generator=training_gen,
-                      steps_per_epoch=len(train_data)/config.batch_size,
-                      epochs=50,
-                      validation_data=eval_gen,
-                      validation_steps=len(val_data)/config.batch_size,
-                      callbacks=[checkpointer, logger, tflogger, lrate])
+        batch_img, batch_mask = next(eval_gen)
+        pred_all = model.predict(batch_img)
+        print(np.shape(pred_all))
+
+
+    elif config.mode == 'test':
+        model.load_weights("result/model_pretrained.h5")
+        ### Test on new image
+        test_img_dir = 'test_images'
+        for test_img in os.listdir(test_img_dir):
+
+            frame = cv2.imread(os.path.join(test_img_dir, test_img))
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+            frame_out = get_BB_new_img(frame, model, verbose=True)
+            frame_out = cv2.cvtColor(frame_out, cv2.COLOR_RGB2BGR)
+            cv2.imwrite('output_images/{}'.format(test_img), frame_out)
+
+    elif config.mode == 'video':
+        model.load_weights("result/model_pretrained.h5")
+        heatmap_prev = np.zeros((640, 960))
+
+        heatmap_10 = [np.zeros((640, 960))] * 10
+
+        video_file = 'project_video.mp4'
+
+        cap_in = cv2.VideoCapture(video_file)
+        video_out_dir = 'video_out'
+
+        f_counter = 0
+        while True:
+
+            ret, frame = cap_in.read()
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+            if ret:
+
+                f_counter += 1
+
+                frame_out = get_BB_new_img(frame, model)
+                frame_out = cv2.cvtColor(frame_out, cv2.COLOR_RGB2BGR)
+
+                cv2.imwrite(os.path.join(video_out_dir, '{:06d}.jpg'.format(f_counter)), frame_out)
+
+                cv2.imshow('', frame_out)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+
+        # When everything done, release the capture
+        cap_in.release()
+        cv2.destroyAllWindows()
+        exit()
 
     print("Done")
+
+
+
 

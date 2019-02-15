@@ -3,7 +3,8 @@ from SSD import process_frame_bgr_with_SSD, get_SSD_model
 from vehicle import Vehicle
 import os
 import os.path as path
-
+import h5py
+from moviepy.editor import VideoFileClip
 
 # global deep network model
 ssd_model, bbox_helper, color_palette = get_SSD_model()
@@ -68,39 +69,26 @@ def process_pipeline(frame, verbose=False):
 
     return img_blend_out
 
+def process_video(input_file, output_file):
+    """ Given input_file video, save annotated video to output_file """
+    # video = VideoFileClip(input_file).subclip(40,44) # from 38s to 46s
+    video = VideoFileClip(input_file)
+    annotated_video = video.fl_image(process_pipeline)
+    annotated_video.write_videofile(output_file, audio=False)
+
 
 if __name__ == '__main__':
 
-    mode = 'images'
+    mode = 'video'
 
     if mode == 'video':
 
-        video_file = 'project_video.mp4'
+        video_file = 'input_video/video1.mov'
+        out_path = 'output_video/video1.mp4'
+
+        process_video(video_file, out_path)
 
         cap_in = cv2.VideoCapture(video_file)
-        video_out_dir = '../../../NANODEGREE/term_1/project_5_vehicle_detection/frames_out'
-
-        f_counter = 0
-        while True:
-
-            ret, frame = cap_in.read()
-
-            if ret:
-
-                f_counter += 1
-
-                frame_out = process_pipeline(frame, verbose=1)
-
-                cv2.imwrite(path.join(video_out_dir, '{:06d}.jpg'.format(f_counter)), frame_out)
-
-                cv2.imshow('', frame_out)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-
-        # When everything done, release the capture
-        cap_in.release()
-        cv2.destroyAllWindows()
-        exit()
 
     else:
 
